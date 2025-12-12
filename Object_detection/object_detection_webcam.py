@@ -18,9 +18,9 @@ def run_webcam_detection():
     # 1. Load the YOLOv8 Model
     try:
         model = YOLO(MODEL_PATH)
-        print(f"✅ Model loaded successfully: {MODEL_PATH}")
+        print(f" Model loaded successfully: {MODEL_PATH}")
     except Exception as e:
-        print(f"❌ Error loading model: {e}")
+        print(f" Error loading model: {e}")
         print("Please ensure you have a stable internet connection for the first run to download the model.")
         return
 
@@ -28,7 +28,7 @@ def run_webcam_detection():
     cap = cv2.VideoCapture(WEBCAM_INDEX)
     
     if not cap.isOpened():
-        print(f"❌ Error: Could not open webcam with index {WEBCAM_INDEX}.")
+        print(f" Error: Could not open webcam with index {WEBCAM_INDEX}.")
         print("Try changing the WEBCAM_INDEX (e.g., to 1 or 2).")
         return
         
