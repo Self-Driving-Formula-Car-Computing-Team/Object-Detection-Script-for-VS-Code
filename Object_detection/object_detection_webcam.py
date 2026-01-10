@@ -1,5 +1,6 @@
 import cv2
 from ultralytics import YOLO
+import serial
 
 # --- Configuration ---
 # You can change 'yolov8n.pt' to 'yolov8s.pt' or 'yolov8m.pt' for better accuracy
@@ -7,6 +8,10 @@ from ultralytics import YOLO
 MODEL_PATH = "yolov8n.pt"
 WEBCAM_INDEX = 0  # 0 is usually the built-in webcam. Change to 1, 2, etc., if you have multiple cameras.
 CONFIDENCE_THRESHOLD = 0.40 # Minimum confidence score for a detection to be displayed
+
+# Arduino Configuration
+ARDUINO_PORT = "COM3"  # Change to your Arduino port
+ARDUINO_BAUDRATE = 9600
 
 
 def run_webcam_detection():
@@ -24,6 +29,15 @@ def run_webcam_detection():
         print("Please ensure you have a stable internet connection for the first run to download the model.")
         return
 
+    # Initialize Arduino
+    try:
+        arduino = serial.Serial(ARDUINO_PORT, ARDUINO_BAUDRATE, timeout=1)
+        print(f" Arduino connected on {ARDUINO_PORT}")
+    except:
+        print("Arduino not connected")
+        arduino = None
+
+
     # 2. Initialize Video Capture (Webcam)
     cap = cv2.VideoCapture(WEBCAM_INDEX)
     
@@ -32,8 +46,12 @@ def run_webcam_detection():
         print("Try changing the WEBCAM_INDEX (e.g., to 1 or 2).")
         return
         
-    print(f"✅ Webcam opened successfully (Index: {WEBCAM_INDEX}).")
+        
+    print(f" Webcam opened successfully (Index: {WEBCAM_INDEX}).")
     print("Press 'q' to exit the application window.")
+
+            
+
 
     # 3. Real-Time Detection Loop
     while cap.isOpened():
@@ -48,6 +66,11 @@ def run_webcam_detection():
                 verbose=False
             )
             
+            # Send detection count to Arduino
+            if arduino and len(results[0].boxes) > 0:
+                detection_count = len(results[0].boxes)
+                arduino.write(f"{detection_count}\n".encode())
+
             # 5. Get the annotated frame (with boxes and labels)
             annotated_frame = results[0].plot()
 
@@ -62,6 +85,10 @@ def run_webcam_detection():
             # If frame reading fails
             print("Warning: Failed to read frame from camera.")
             break
+
+    # Close Arduino connection
+    if arduino:
+        arduino.close()
 
     # 8. Cleanup Resources
     cap.release()
